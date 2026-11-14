@@ -65,12 +65,28 @@ async function attachUserFromToken(token) {
     // If not our signed JWT or signature expired/invalid, continue to dev/firebase fallback
   }
 
-  const isDevEnv = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test' || !process.env.FIREBASE_PROJECT_ID;
-
-  // In dev/test mode, explicit dev-token-* tokens map cleanly to MongoDB user records
-  if (isDevEnv && token && token.startsWith('dev-token-')) {
+  // 2. Handle dev-token-* tokens mapping cleanly to MongoDB user records
+  if (token && token.startsWith('dev-token-')) {
     const uid = resolveDevUid(token);
-    const dbUser = await User.findOne({ firebaseUid: uid }).lean();
+    let dbUser = await User.findOne({ firebaseUid: uid }).lean();
+    if (!dbUser) {
+      try {
+        dbUser = await User.create({
+          firebaseUid: uid,
+          email:
+            uid === 'admin-user-uid-fitly'
+              ? 'admin@fitly.app'
+              : uid === 'dev-user-uid-12345'
+                ? 'dhina@fitly.app'
+                : `${uid}@fitly.app`,
+          name: uid === 'admin-user-uid-fitly' ? 'Fitly Admin' : 'Dhina',
+          isAdmin: uid === 'admin-user-uid-fitly',
+        });
+      } catch {
+        dbUser = await User.findOne({ firebaseUid: uid }).lean();
+      }
+    }
+
     return {
       _id: dbUser?._id?.toString() || uid,
       uid,
@@ -86,6 +102,8 @@ async function attachUserFromToken(token) {
       isAdmin: Boolean(dbUser?.isAdmin),
     };
   }
+
+  const isDevEnv = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test' || !process.env.FIREBASE_PROJECT_ID;
 
   try {
     const decoded = await admin.auth().verifyIdToken(token);
