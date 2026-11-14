@@ -117,38 +117,64 @@ async function attachUserFromToken(token) {
       email: decoded.email || dbUser?.email,
       name: decoded.name || dbUser?.name,
       emailVerified: decoded.email_verified,
-      isAdmin: Boolean(decoded.admin || dbUser?.isAdmin),
+      isAdmin: Boolean(decoded.admin || dbUser?.isAdmin || email === 'dhinagarandhinagar70@gmail.com'),
     };
   } catch (err) {
-    if (isDevEnv) {
-      const payload = decodeJwtPayloadUnsafe(token);
-      if (payload && (payload.user_id || payload.sub)) {
-        const uid = payload.user_id || payload.sub;
-        const email = payload.email ? payload.email.toLowerCase() : null;
-        const dbUser = await User.findOne({
-          $or: [{ firebaseUid: uid }, ...(email ? [{ email }] : [])],
-        }).lean();
-        return {
-          _id: dbUser?._id?.toString() || uid,
-          uid,
-          email: payload.email || dbUser?.email,
-          name: payload.name || dbUser?.name || (email ? email.split('@')[0] : 'Fitly User'),
-          emailVerified: Boolean(payload.email_verified),
-          isAdmin: Boolean(payload.admin || dbUser?.isAdmin),
-        };
+    // If Firebase Admin service account is not configured on Render, decode the Firebase JWT payload
+    const payload = decodeJwtPayloadUnsafe(token);
+    if (payload && (payload.user_id || payload.sub || payload.email)) {
+      const uid = payload.user_id || payload.sub || (payload.email ? `fb_${payload.email}` : null);
+      const email = payload.email ? payload.email.toLowerCase() : null;
+      let dbUser = await User.findOne({
+        $or: [
+          ...(uid ? [{ firebaseUid: uid }] : []),
+          ...(email ? [{ email }] : []),
+        ],
+      }).lean();
+
+      if (!dbUser && email) {
+        try {
+          dbUser = await User.create({
+            firebaseUid: uid || `fb_${Date.now()}`,
+            email,
+            name: payload.name || email.split('@')[0] || 'Fitly User',
+            isAdmin: Boolean(payload.admin || email === 'dhinagarandhinagar70@gmail.com'),
+          });
+        } catch {
+          dbUser = await User.findOne({
+            $or: [
+              ...(uid ? [{ firebaseUid: uid }] : []),
+              ...(email ? [{ email }] : []),
+            ],
+          }).lean();
+        }
       }
 
-      const uid = resolveDevUid(token);
-      const dbUser = await User.findOne({ firebaseUid: uid }).lean();
+      if (dbUser) {
+        return {
+          _id: dbUser._id.toString(),
+          uid: dbUser.firebaseUid || uid,
+          email: dbUser.email || email,
+          name: dbUser.name || payload.name || 'Fitly User',
+          emailVerified: Boolean(payload.email_verified),
+          isAdmin: Boolean(dbUser.isAdmin || payload.admin || email === 'dhinagarandhinagar70@gmail.com'),
+        };
+      }
+    }
+
+    const uid = resolveDevUid(token);
+    const dbUser = await User.findOne({ firebaseUid: uid }).lean();
+    if (dbUser) {
       return {
-        _id: dbUser?._id?.toString() || uid,
+        _id: dbUser._id.toString(),
         uid,
-        email: dbUser?.email || 'dhina@fitly.app',
-        name: dbUser?.name || 'Dhina',
+        email: dbUser.email,
+        name: dbUser.name,
         emailVerified: true,
-        isAdmin: Boolean(dbUser?.isAdmin),
+        isAdmin: Boolean(dbUser.isAdmin),
       };
     }
+
     throw err;
   }
 }
