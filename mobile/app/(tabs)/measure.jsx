@@ -423,7 +423,11 @@ export default function MeasureScreen() {
             </View>
             <View style={styles.imageWrapper}>
               <Image
-                source={{ uri: `http://localhost:3000${selectedLog.imageUrl}` }}
+                source={{
+                  uri: selectedLog.imageUrl?.startsWith('http')
+                    ? selectedLog.imageUrl
+                    : `${(process.env.EXPO_PUBLIC_API_URL || 'https://fitly-backend-tkzw.onrender.com/api').replace(/\/api\/?$/, '')}${selectedLog.imageUrl}`
+                }}
                 style={styles.progressImage}
                 resizeMode="cover"
               />
