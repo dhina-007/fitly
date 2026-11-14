@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "363441785150",
+    "project_id": "healtifyfit",
+    "storage_bucket": "healtifyfit.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:363441785150:android:64ba32d9204728d60c446f",
+        "android_client_info": {
+          "package_name": "healthyfit.launchwebsolutions"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "363441785150-mf281u194hvnequ037gq85a20niu5s4k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCBN-ArNt_W3KArtmV-KaUoImE_JCBAGtY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "363441785150-mf281u194hvnequ037gq85a20niu5s4k.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
