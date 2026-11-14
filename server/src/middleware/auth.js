@@ -1,5 +1,20 @@
+const jwt = require('jsonwebtoken');
 const { admin, initFirebase } = require('../config/firebase.admin');
 const User = require('../models/User');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'fitly-super-secure-jwt-secret-key-2026';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '30d';
+
+function generateToken(user) {
+  const payload = {
+    _id: user._id?.toString(),
+    uid: user.firebaseUid || user._id?.toString(),
+    email: user.email,
+    name: user.name,
+    isAdmin: Boolean(user.isAdmin),
+  };
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+}
 
 initFirebase();
 
@@ -25,6 +40,31 @@ function decodeJwtPayloadUnsafe(token) {
 }
 
 async function attachUserFromToken(token) {
+  // 1. Verify custom backend signed JWT
+  try {
+    const decodedJwt = jwt.verify(token, JWT_SECRET);
+    if (decodedJwt && (decodedJwt.uid || decodedJwt._id)) {
+      const dbUser = await User.findOne({
+        $or: [
+          ...(decodedJwt._id ? [{ _id: decodedJwt._id }] : []),
+          ...(decodedJwt.uid ? [{ firebaseUid: decodedJwt.uid }] : []),
+          ...(decodedJwt.email ? [{ email: decodedJwt.email.toLowerCase() }] : []),
+        ],
+      }).lean();
+
+      return {
+        _id: dbUser?._id?.toString() || decodedJwt._id || decodedJwt.uid,
+        uid: dbUser?.firebaseUid || decodedJwt.uid || decodedJwt._id,
+        email: dbUser?.email || decodedJwt.email,
+        name: dbUser?.name || decodedJwt.name || 'Fitly User',
+        emailVerified: true,
+        isAdmin: Boolean(dbUser?.isAdmin || decodedJwt.isAdmin),
+      };
+    }
+  } catch (jwtErr) {
+    // If not our signed JWT or signature expired/invalid, continue to dev/firebase fallback
+  }
+
   const isDevEnv = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test' || !process.env.FIREBASE_PROJECT_ID;
 
   // In dev/test mode, explicit dev-token-* tokens map cleanly to MongoDB user records
@@ -160,4 +200,10 @@ async function requireAdmin(req, res, next) {
   }
 }
 
-module.exports = { requireAuth, requireAdmin, protect: requireAuth };
+module.exports = {
+  requireAuth,
+  requireAdmin,
+  protect: requireAuth,
+  generateToken,
+  JWT_SECRET,
+};

@@ -54,6 +54,33 @@ export default function RegisterScreen() {
     if (!validate()) return;
     setLoading(true);
     try {
+      // 1. Try Backend JWT Registration
+      try {
+        const res = await api.post('/auth/register', {
+          email: email.trim(),
+          password,
+          name: name.trim(),
+        });
+        if (res.data?.success && res.data?.token) {
+          queryClient.clear();
+          setToken(res.data.token);
+          setUser(res.data.data);
+          setProfile(res.data.data);
+          showToast({ type: 'success', title: 'Account Created', message: 'Welcome to Fitly!' });
+          if (res.data.data?.onboardingCompleted) {
+            router.replace('/(tabs)/home');
+          } else {
+            router.replace('/(auth)/onboarding');
+          }
+          return;
+        }
+      } catch (jwtErr) {
+        if (jwtErr?.response?.data?.message) {
+          throw new Error(jwtErr.response.data.message);
+        }
+      }
+
+      // 2. Fallback to Firebase Registration
       const fbUser = await authService.register(email.trim(), password, name.trim());
       queryClient.clear();
       const idToken = await fbUser.getIdToken();

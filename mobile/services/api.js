@@ -15,10 +15,13 @@ const api = axios.create({ baseURL: API_URL, timeout: 30000, headers: { 'Content
 
 api.interceptors.request.use(async (config) => {
   try {
-    let token = await authService.getIdToken();
+    const authState = useAuthStore.getState();
+    let token = authState.token;
     if (!token) {
-      const authState = useAuthStore.getState();
-      token = authState.token || (authState.user ? `dev-token-${authState.user.uid || 'demo'}` : null);
+      token = await authService.getIdToken();
+    }
+    if (!token && authState.user) {
+      token = `dev-token-${authState.user.uid || 'demo'}`;
     }
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;

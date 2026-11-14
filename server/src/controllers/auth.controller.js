@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const { generateToken } = require('../middleware/auth');
 const {
   predictMaintenanceCalories,
   calculateGoalCalorieTarget,
@@ -199,4 +200,115 @@ async function deleteAccount(req, res, next) {
   }
 }
 
-module.exports = { getProfile, updateProfile, deleteAccount };
+/**
+ * Register a new user with email and password -> returns signed JWT
+ */
+async function register(req, res, next) {
+  try {
+    const { email, password, name } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: 'Email and password are required' });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const existingUser = await User.findOne({ email: normalizedEmail });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: 'Email is already registered' });
+    }
+
+    const user = new User({
+      email: normalizedEmail,
+      name: (name || email.split('@')[0] || 'Fitly User').trim(),
+      password,
+    });
+
+    await user.save();
+
+    const token = generateToken(user);
+
+    res.status(201).json({
+      success: true,
+      token,
+      data: {
+        _id: user._id,
+        uid: user.firebaseUid,
+        email: user.email,
+        name: user.name,
+        isAdmin: user.isAdmin,
+        onboardingCompleted: user.onboardingCompleted,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * Login with email and password -> returns signed JWT
+ */
+async function login(req, res, next) {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: 'Email and password are required' });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail }).select('+password');
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Invalid email or password' });
+    }
+
+    if (user.password) {
+      const isMatch = await user.comparePassword(password);
+      if (!isMatch) {
+        return res.status(401).json({ success: false, message: 'Invalid email or password' });
+      }
+    } else {
+      user.password = password;
+      await user.save();
+    }
+
+    const token = generateToken(user);
+
+    res.json({
+      success: true,
+      token,
+      data: {
+        _id: user._id,
+        uid: user.firebaseUid,
+        email: user.email,
+        name: user.name,
+        isAdmin: user.isAdmin,
+        onboardingCompleted: user.onboardingCompleted,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * Exchange authenticated session / Firebase token for a persistent backend JWT
+ */
+async function exchangeToken(req, res, next) {
+  try {
+    const token = generateToken(req.user);
+    res.json({
+      success: true,
+      token,
+      data: req.user,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = {
+  getProfile,
+  updateProfile,
+  deleteAccount,
+  register,
+  login,
+  exchangeToken,
+};

@@ -61,6 +61,25 @@ export default function LoginScreen() {
     if (!validate()) return;
     setLoading(true);
     try {
+      // 1. Try Backend JWT authentication
+      try {
+        const res = await api.post('/auth/login', { email: email.trim(), password });
+        if (res.data?.success && res.data?.token) {
+          queryClient.clear();
+          setToken(res.data.token);
+          setUser(res.data.data);
+          setProfile(res.data.data);
+          showToast({ type: 'success', title: 'Welcome Back!', message: 'Signed in successfully' });
+          router.replace('/(tabs)/home');
+          return;
+        }
+      } catch (jwtErr) {
+        if (jwtErr?.response?.status === 401) {
+          throw new Error('Invalid email or password');
+        }
+      }
+
+      // 2. Fallback to Firebase authentication
       const fbUser = await authService.login(email.trim(), password);
       await syncFirebaseUserSession(fbUser);
     } catch (err) {
