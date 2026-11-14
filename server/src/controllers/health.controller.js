@@ -4,6 +4,7 @@ const ActivityLog = require('../models/ActivityLog');
 const FoodLog = require('../models/FoodLog');
 const WaterLog = require('../models/WaterLog');
 const SleepLog = require('../models/SleepLog');
+const { getLastConnectionError, connectDatabase } = require('../config/database');
 
 /**
  * Format uptime into days, hours, minutes, seconds
@@ -31,7 +32,12 @@ exports.getSystemHealth = async (req, res) => {
   let dbLatencyMs = null;
 
   try {
-    const readyState = mongoose.connection.readyState;
+    let readyState = mongoose.connection.readyState;
+    if (readyState !== 1 && process.env.MONGODB_URI) {
+      await connectDatabase();
+      readyState = mongoose.connection.readyState;
+    }
+
     const states = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
     dbStatus = states[readyState] || 'unknown';
 
@@ -61,6 +67,8 @@ exports.getSystemHealth = async (req, res) => {
       status: dbStatus,
       latencyMs: dbLatencyMs,
       name: mongoose.connection.name || 'healthfit',
+      hasUriConfigured: Boolean(process.env.MONGODB_URI),
+      error: !isHealthy ? (getLastConnectionError() || 'MongoDB is not connected. Check IP Access List (0.0.0.0/0) or credentials in Atlas.') : null,
     },
     system: {
       uptimeSeconds: Math.floor(uptimeSeconds),
