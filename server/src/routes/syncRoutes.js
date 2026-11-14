@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
+const { requireAuth } = require('../middleware/auth');
 const ActivityLog = require('../models/ActivityLog');
 const SleepLog = require('../models/SleepLog');
 
 // POST /api/sync/device
-router.post('/device', async (req, res, next) => {
+router.post('/device', requireAuth, async (req, res, next) => {
   try {
     const userId = req.user.uid;
     const { date, steps, activeCalories, sleepHours, source } = req.body;

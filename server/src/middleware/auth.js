@@ -139,7 +139,8 @@ async function requireAuth(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      if (process.env.NODE_ENV === 'development' || !process.env.FIREBASE_PROJECT_ID) {
+      // In development / test mode, allow non-admin dev user fallback
+      if (process.env.NODE_ENV !== 'production') {
         const dbUser = await User.findOne({ firebaseUid: 'dev-user-uid-12345' }).lean();
         req.user = {
           _id: dbUser?._id?.toString() || '6ac7e5d1ac9bff7edb7067a2',
@@ -147,7 +148,7 @@ async function requireAuth(req, res, next) {
           email: dbUser?.email || 'dhina@fitly.app',
           name: dbUser?.name || 'Dhina',
           emailVerified: true,
-          isAdmin: Boolean(dbUser?.isAdmin),
+          isAdmin: false,
         };
         return next();
       }
