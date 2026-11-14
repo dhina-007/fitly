@@ -200,9 +200,25 @@ async function requireAdmin(req, res, next) {
   }
 }
 
+async function optionalAuth(req, res, next) {
+  try {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split('Bearer ')[1];
+      if (token) {
+        req.user = await attachUserFromToken(token);
+      }
+    }
+  } catch (err) {
+    // Continue without user context for public requests
+  }
+  return next();
+}
+
 module.exports = {
   requireAuth,
   requireAdmin,
+  optionalAuth,
   protect: requireAuth,
   generateToken,
   JWT_SECRET,

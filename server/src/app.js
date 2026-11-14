@@ -18,7 +18,21 @@ app.use(cors({
   credentials: true,
 }));
 
-// Rate limiting
+// Body parsing
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(compression());
+
+// Logging (safe - no health data logged)
+if (process.env.NODE_ENV !== 'test') {
+  app.use(morgan('[:date[iso]] :method :url :status :response-time ms'));
+}
+
+// 100% Public Health checks (bypasses rate limiters for Render & uptime monitors)
+app.use('/health', require('./routes/health.routes'));
+app.use('/api/health', require('./routes/health.routes'));
+
+// Rate limiting for protected API routes
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: process.env.NODE_ENV === 'production' ? 300 : 5000,
@@ -32,20 +46,6 @@ const aiLimiter = rateLimit({
 
 app.use('/api', globalLimiter);
 app.use('/api/ai', aiLimiter);
-
-// Body parsing
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(compression());
-
-// Logging (safe - no health data logged)
-if (process.env.NODE_ENV !== 'test') {
-  app.use(morgan('[:date[iso]] :method :url :status :response-time ms'));
-}
-
-// Health check
-app.use('/health', require('./routes/health.routes'));
-app.use('/api/health', require('./routes/health.routes'));
 
 // Routes
 app.use('/api/auth', require('./routes/auth.routes'));
