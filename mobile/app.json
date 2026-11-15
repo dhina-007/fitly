@@ -30,6 +30,7 @@
         "backgroundColor": "#070910"
       },
       "package": "healthyfit.launchwebsolutions",
+      "versionCode": 1,
       "googleServicesFile": "./google-services.json",
       "permissions": [
         "android.permission.ACTIVITY_RECOGNITION",
