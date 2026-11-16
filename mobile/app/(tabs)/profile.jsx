@@ -385,6 +385,7 @@ export default function ProfileScreen() {
                 { title: 'Healthy Recipe Library', icon: 'ChefHat', action: () => router.push('/recipes') },
                 { title: 'Daily Habits Tracker', icon: 'Zap', action: () => router.push('/habits') },
                 { title: 'Community & Challenges', icon: 'Users', action: () => router.push('/community') },
+                { title: 'Privacy Policy & Terms', icon: 'Shield', action: () => router.push('/privacy-policy') },
               ].map((item, index, arr) => (
                 <TouchableOpacity
                   key={item.title}

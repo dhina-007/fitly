@@ -358,8 +358,8 @@ export default function RegisterScreen() {
             {/* Terms and Privacy Policy */}
             <Text style={styles.termsText}>
               By creating an account, you agree to Fitly’s{' '}
-              <Text style={styles.termsLink}>Terms of Service</Text> and{' '}
-              <Text style={styles.termsLink}>Privacy Policy</Text>.
+              <Text style={styles.termsLink} onPress={() => router.push('/privacy-policy')}>Terms of Service</Text> and{' '}
+              <Text style={styles.termsLink} onPress={() => router.push('/privacy-policy')}>Privacy Policy</Text>.
             </Text>
           </View>
 

@@ -32,6 +32,11 @@ if (process.env.NODE_ENV !== 'test') {
 app.use('/health', require('./routes/health.routes'));
 app.use('/api/health', require('./routes/health.routes'));
 
+// 100% Public Legal and Privacy routes (Required for Google Play Store review)
+app.use('/privacy-policy', require('./routes/legal.routes'));
+app.use('/api/privacy-policy', require('./routes/legal.routes'));
+app.use('/terms', require('./routes/legal.routes'));
+
 // Rate limiting for protected API routes
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
