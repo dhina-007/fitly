@@ -1,13 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const PRIVACY_HTML = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Privacy Policy - Fitly Health & Fitness</title>
-  <style>
+const COMMON_STYLES = `
     :root {
       --primary: #10B981;
       --primary-dark: #059669;
@@ -41,6 +35,26 @@ const PRIVACY_HTML = `<!DOCTYPE html>
       margin: 0;
       color: #A7F3D0;
       font-size: 1rem;
+    }
+    .nav-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 18px;
+    }
+    .nav-tabs a {
+      color: white;
+      text-decoration: none;
+      background: rgba(255, 255, 255, 0.15);
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .nav-tabs a.active, .nav-tabs a:hover {
+      background: white;
+      color: #065F46;
     }
     .container {
       max-width: 820px;
@@ -87,6 +101,18 @@ const PRIVACY_HTML = `<!DOCTYPE html>
       font-weight: 500;
       color: #065F46;
     }
+    .warning-box {
+      background: #FEF2F2;
+      border-left: 4px solid #EF4444;
+      padding: 16px;
+      border-radius: 6px;
+      margin: 18px 0;
+    }
+    .warning-box p {
+      margin: 0;
+      font-weight: 500;
+      color: #991B1B;
+    }
     .footer {
       text-align: center;
       color: var(--muted);
@@ -98,13 +124,25 @@ const PRIVACY_HTML = `<!DOCTYPE html>
       color: var(--primary-dark);
       text-decoration: underline;
     }
-  </style>
+`;
+
+const PRIVACY_HTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy - Fitly Health & Fitness</title>
+  <style>${COMMON_STYLES}</style>
 </head>
 <body>
 
   <div class="header">
     <h1>Fitly Privacy Policy</h1>
     <p>Last Updated: November 16, 2026 | Effective Date: November 16, 2026</p>
+    <div class="nav-tabs">
+      <a href="/privacy-policy" class="active">Privacy Policy</a>
+      <a href="/terms">Terms & Conditions</a>
+    </div>
   </div>
 
   <div class="container">
@@ -179,7 +217,112 @@ const PRIVACY_HTML = `<!DOCTYPE html>
 </body>
 </html>`;
 
+const TERMS_HTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terms and Conditions - Fitly Health & Fitness</title>
+  <style>${COMMON_STYLES}</style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Fitly Terms & Conditions</h1>
+    <p>Last Updated: November 16, 2026 | Effective Date: November 16, 2026</p>
+    <div class="nav-tabs">
+      <a href="/privacy-policy">Privacy Policy</a>
+      <a href="/terms" class="active">Terms & Conditions</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <div class="warning-box">
+        <p>⚠️ <strong>Important Medical Disclaimer:</strong> Fitly is not a medical organization or clinical provider. The content, calorie calculations, and Ria AI Coach suggestions are provided for educational and fitness tracking purposes only. Consult a physician before beginning any diet or workout regimen.</p>
+      </div>
+
+      <h2>1. Agreement to Terms</h2>
+      <p>By downloading, installing, registering, or using the Fitly mobile application or services, you agree to be bound by these Terms and Conditions ("Terms"). If you do not agree with any part of these Terms, you must immediately cease using the application.</p>
+
+      <h2>2. Eligibility & Account Responsibilities</h2>
+      <ul>
+        <li>You must be at least 13 years old to create an account and use Fitly.</li>
+        <li>You agree to provide accurate, truthful, and complete information during registration and keep your profile metrics up to date.</li>
+        <li>You are responsible for maintaining the confidentiality of your account credentials and password. Fitly cannot and will not be liable for any loss resulting from unauthorized account access.</li>
+      </ul>
+
+      <h2>3. Health, Nutrition & Exercise Disclaimer</h2>
+      <p>Fitness activities and dietary adjustments involve inherent risks of physical injury or metabolic health changes:</p>
+      <ul>
+        <li>Fitly does not provide medical diagnosis, clinical treatment, or emergency medical services.</li>
+        <li>Calorie targets and macronutrient splits (protein, carbohydrates, fat) are calculated using standardized metabolic equations (Mifflin-St Jeor / Harris-Benedict) and should be used as general guidelines.</li>
+        <li>Always perform exercises with proper form, warm up appropriately, and stop immediately if you experience pain, dizziness, or shortness of breath.</li>
+      </ul>
+
+      <h2>4. Ria AI Coach Terms of Use</h2>
+      <p>Ria AI Coach utilizes artificial intelligence and verified nutritional databases (such as ICMR-NIN) to estimate calories and offer suggestions:</p>
+      <ul>
+        <li>Nutritional values for regional recipes, portions, and restaurant preparations are approximations and may vary based on ingredients and cooking methods.</li>
+        <li>AI recommendations do not replace personalized guidance from a certified dietitian, sports nutritionist, or healthcare professional.</li>
+      </ul>
+
+      <h2>5. Google Health Connect & Wearable Integration</h2>
+      <p>When syncing with Google Health Connect, Apple Health, or supported wearable devices, Fitly reads your step count, active calories, and sleep duration. You retain full control over these permissions through your device operating system settings and can revoke access at any time.</p>
+
+      <h2>6. Community & Social Guidelines</h2>
+      <p>If you participate in Fitly's community feed, challenges, or social leaderboards, you agree not to:</p>
+      <ul>
+        <li>Post abusive, hateful, defamatory, obscene, or threatening content.</li>
+        <li>Promote extreme, dangerous, or medically unsupervised starvation diets or eating disorders.</li>
+        <li>Spam other community members with unsolicited commercial promotions or affiliate links.</li>
+      </ul>
+
+      <h2>7. Intellectual Property Rights</h2>
+      <p>All software, designs, trademarks, logos, workout routines, and database structures within Fitly are the exclusive intellectual property of Fitly and its licensors. You are granted a limited, personal, non-exclusive, non-transferable license to use the app for personal fitness tracking.</p>
+
+      <h2>8. Account Termination & Cancellation</h2>
+      <p>You may terminate your account at any time by requesting deletion in the app or contacting <a href="mailto:dhinagarandhinagar70@gmail.com">dhinagarandhinagar70@gmail.com</a>. Fitly reserves the right to suspend or terminate accounts that violate these Terms or compromise the security of the service.</p>
+
+      <h2>9. Limitation of Liability</h2>
+      <p>To the maximum extent permitted by applicable law, Fitly, its developers, and affiliates shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including physical injury, health complications, or data loss arising from the use of or inability to use the application.</p>
+
+      <h2>10. Modifications to Terms</h2>
+      <p>We reserve the right to modify these Terms at any time. If material changes are made, we will notify you through the app or update the "Last Updated" date at the top of this document. Continued use of the app constitutes acceptance of the revised Terms.</p>
+
+      <h2>11. Contact & Support</h2>
+      <p>For questions or assistance regarding these Terms and Conditions, please contact us at:</p>
+      <p>
+        <strong>Fitly Legal & Support Team</strong><br>
+        Email: <a href="mailto:dhinagarandhinagar70@gmail.com">dhinagarandhinagar70@gmail.com</a><br>
+        Website: <a href="https://fitly-backend-tkzw.onrender.com">https://fitly-backend-tkzw.onrender.com</a>
+      </p>
+    </div>
+  </div>
+
+  <div class="footer">
+    &copy; 2026 Fitly Health & Fitness. All rights reserved.
+  </div>
+
+</body>
+</html>`;
+
+// Handler that smartly serves Terms or Privacy based on route
 router.get('/', (req, res) => {
+  const url = req.baseUrl || req.originalUrl || '';
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  if (url.includes('terms')) {
+    return res.send(TERMS_HTML);
+  }
+  return res.send(PRIVACY_HTML);
+});
+
+router.get('/terms', (req, res) => {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(TERMS_HTML);
+});
+
+router.get('/privacy-policy', (req, res) => {
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.send(PRIVACY_HTML);
 });
